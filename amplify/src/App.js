@@ -6,6 +6,7 @@ import config from "./amplifyconfiguration.json";
 import { generateClient } from "aws-amplify/api";
 import { listTodos } from "./graphql/queries";
 import { uploadData, remove, list, getUrl } from "aws-amplify/storage";
+import "@aws-amplify/ui-react/styles.css";
 
 import "./App.css"; // Import the CSS file
 import {
@@ -88,10 +89,10 @@ export function App({ signOut, user }) {
       console.error("Error deleting comment:", error);
     }
   };
-
   const handleSubmitComment = async (event) => {
     event.preventDefault(); // Prevent the form from reloading the page
     await uploadComment(name, comment); // Use the provided uploadComment function
+    await listTodoItem(); // Reload the comments
     setName(""); // Clear the name input after submission
     setComment(""); // Clear the comment input after submission
   };
@@ -143,7 +144,7 @@ export function App({ signOut, user }) {
 
   console.log("final download links", s3DownloadLinks);
   return (
-    <div className="App">
+    <div className="App" style={{ paddingTop: "1em" }}>
       <header className="App-header">
         <h1 className="title">User {user?.username}</h1>
         <Button
@@ -170,7 +171,7 @@ export function App({ signOut, user }) {
               label="Comment"
               variant="outlined"
               multiline
-              rows={4}
+              rows={1}
               value={comment}
               fullWidth
               margin="normal"
@@ -204,19 +205,20 @@ export function App({ signOut, user }) {
           ))}
         </List>
         <section className="upload-section">
-          <input
-            type="file"
-            className="input-file"
-            onChange={(e) => setFileData(e.target.files[0])}
-          />
           <Button
             variant="contained"
             color="primary"
             onClick={uploadFile}
             className="upload-button"
+            style={{ marginRight: "1em" }}
           >
             Upload File
           </Button>
+          <input
+            type="file"
+            className="input-file"
+            onChange={(e) => setFileData(e.target.files[0])}
+          />
         </section>
         <List>
           {s3DownloadLinks.map((link, index) => (
