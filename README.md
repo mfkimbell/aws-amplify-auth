@@ -132,5 +132,5 @@ As well as updating the bucket policy to allow for reading and deleting of files
 }
 ```
 # Authentication
-This "withAuthenticator" wrapper `export default withAuthenticator(App);` redirects unauthorized users to the login page. AWS Amplify allows you to designate the preferred authentication method, and I chose Cognito. Here we can see my one user in my Cognito User Pool that was set up by Amplify:
-<img width="952" alt="Screenshot 2024-03-19 at 11 53 48 PM" src="https://github.com/mfkimbell/aws-amplify-auth/assets/107063397/f1b4d1ad-25f8-468c-9f48-52e71852be3a">
+This "withAuthenticator" wrapper `export default withAuthenticator(App);` redirects unauthorized users to the login page. AWS Amplify allows you to designate the preferred authentication method, and I chose Cognito. Here we can see my two users in my Cognito User Pool that was set up by Amplify:
+<img width="1052" alt="Screenshot 2024-03-20 at 12 55 50 AM" src="https://github.com/mfkimbell/aws-amplify-file-dashboard/assets/107063397/a854acc6-15a3-45cd-b61b-320935d11325">
