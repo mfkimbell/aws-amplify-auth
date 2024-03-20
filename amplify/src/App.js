@@ -5,7 +5,7 @@ import { createTodo, updateTodo, deleteTodo } from "./graphql/mutations";
 import config from "./amplifyconfiguration.json";
 import { generateClient } from "aws-amplify/api";
 import { listTodos } from "./graphql/queries";
-import { uploadData, list, getUrl } from "aws-amplify/storage";
+import { uploadData, remove, list, getUrl } from "aws-amplify/storage";
 
 import "./App.css"; // Import the CSS file
 import {
@@ -20,6 +20,7 @@ import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 Amplify.configure(config);
+const client = generateClient();
 
 export function App({ signOut, user }) {
   const [items, setItems] = useState([]);
@@ -38,16 +39,27 @@ export function App({ signOut, user }) {
         options: {
           accessLevel: "public", // had to change this to public
         },
-      }).result;
+      });
       console.log("Succeeded: ", result);
       setFileStatus(true);
+      // Refresh the list of files after successful upload
+      await listObjectsFromS3();
     } catch (error) {
       console.log("Error : ", error);
     }
   };
+  const deleteFile = async (filename) => {
+    console.log("filename", filename);
+    try {
+      await remove({ key: filename, level: "public" });
+      console.log("File deleted successfully:", filename);
+      // Optionally, refresh the list of files after successful deletion
+      await listObjectsFromS3();
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  };
   const uploadComment = async (name, comment) => {
-    const client = generateClient();
-
     const result1 = await client.graphql({
       query: createTodo,
       variables: {
@@ -60,12 +72,35 @@ export function App({ signOut, user }) {
     console.log("result1", result1);
   };
 
+  const deleteComment = async (id) => {
+    try {
+      const result = await client.graphql({
+        query: deleteTodo,
+        variables: {
+          input: {
+            id: id,
+          },
+        },
+      });
+      console.log("Delete result", result);
+      setItems(items.filter((item) => item.id !== id)); // Update state to remove the deleted item
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
   const handleSubmitComment = async (event) => {
     event.preventDefault(); // Prevent the form from reloading the page
     await uploadComment(name, comment); // Use the provided uploadComment function
     setName(""); // Clear the name input after submission
     setComment(""); // Clear the comment input after submission
   };
+
+  async function listTodoItem() {
+    const entries = await client.graphql({ query: listTodos });
+    console.log("entries: ", entries.data.listTodos.items);
+    setItems(entries.data.listTodos.items);
+  }
 
   async function listObjectsFromS3() {
     const s3Objects = await list({
@@ -102,14 +137,6 @@ export function App({ signOut, user }) {
   }
 
   useEffect(() => {
-    const client = generateClient();
-
-    async function listTodoItem() {
-      const entries = await client.graphql({ query: listTodos });
-      console.log("entries: ", entries.data.listTodos.items);
-      setItems(entries.data.listTodos.items);
-    }
-
     listTodoItem();
     listObjectsFromS3();
   }, []);
@@ -118,51 +145,65 @@ export function App({ signOut, user }) {
   return (
     <div className="App">
       <header className="App-header">
-        <h1 className="title">Hello {user?.username}</h1>
-        <Button className="button sign-out-button" onClick={signOut}>
+        <h1 className="title">User {user?.username}</h1>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={signOut}
+          className="sign-out-button"
+        >
           Sign out
         </Button>
       </header>
-      <form onSubmit={handleSubmitComment} className="comment-form">
-        <TextField
-          label="Name"
-          variant="outlined"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
-        <TextField
-          label="Comment"
-          variant="outlined"
-          multiline
-          rows={4}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          className="submit-button"
-        >
-          Submit Comment
-        </Button>
-      </form>
       <main>
-        <section>
+        <section className="comment-section">
+          <form onSubmit={handleSubmitComment}>
+            <TextField
+              label="Name"
+              variant="outlined"
+              value={name}
+              fullWidth
+              margin="normal"
+              onChange={(e) => setName(e.target.value)}
+            />
+            <TextField
+              label="Comment"
+              variant="outlined"
+              multiline
+              rows={4}
+              value={comment}
+              fullWidth
+              margin="normal"
+              onChange={(e) => setComment(e.target.value)}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              className="submit-button"
+            >
+              Submit Comment
+            </Button>
+          </form>
+        </section>
+        {fileStatus && (
+          <div className="success-message">File uploaded successfully!</div>
+        )}
+        <List>
           {items.map((item, index) => (
             <ListItem key={index} divider>
               <ListItemText primary={`${item.name} - ${item.description}`} />
-              <IconButton edge="end" aria-label="delete">
+              <IconButton
+                edge="end"
+                aria-label="delete"
+                onClick={() => deleteComment(item.id)}
+              >
                 <DeleteIcon />
               </IconButton>
             </ListItem>
           ))}
-        </section>
-        <section>
+        </List>
+        <section className="upload-section">
           <input
             type="file"
             className="input-file"
@@ -170,17 +211,14 @@ export function App({ signOut, user }) {
           />
           <Button
             variant="contained"
+            color="primary"
             onClick={uploadFile}
             className="upload-button"
           >
             Upload File
           </Button>
         </section>
-        {fileStatus && (
-          <p className="success-message">File uploaded successfully!</p>
-        )}
-
-        <List style={{ width: "100%" }}>
+        <List>
           {s3DownloadLinks.map((link, index) => (
             <ListItem key={index} divider>
               <ListItemText primary={link.filename} />
@@ -191,6 +229,16 @@ export function App({ signOut, user }) {
                 target="_blank"
               >
                 <CloudDownloadIcon />
+              </IconButton>
+              <IconButton
+                edge="end"
+                aria-label="delete"
+                onClick={() => {
+                  console.log("Delete clicked", link.filename);
+                  deleteFile(link.filename);
+                }}
+              >
+                <DeleteIcon />
               </IconButton>
             </ListItem>
           ))}
