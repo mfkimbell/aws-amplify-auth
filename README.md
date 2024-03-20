@@ -1,3 +1,5 @@
+
+
 # How AWS Amplify works
 AWS Amplify integrates with AWS AppSync (a managed GraphQL service) to provide a backend for web and mobile applications.  
 # Sign Into Account
