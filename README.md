@@ -1,7 +1,6 @@
+# AWS Amplify File Dashboard
+An AWS Amplify React application that allows users to sign in using Amplify's authenication through Cognito User Pools, then add comments and files to a group dashboard. A user can upload files for all other users to see and download, as well as add comments. Files are stored in S3 and comments are stores via GraphQL into a DynamoDB table.
 
-
-# How AWS Amplify works
-AWS Amplify integrates with AWS AppSync (a managed GraphQL service) to provide a backend for web and mobile applications.  
 # Sign Into Account
 <img width="670" alt="Screenshot 2024-03-18 at 10 21 17 PM" src="https://github.com/mfkimbell/aws-amplify-auth/assets/107063397/842ce4d6-157a-42a0-b1d9-c30625fcddad">
 
