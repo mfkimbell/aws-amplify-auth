@@ -75,7 +75,7 @@ const deleteComment = async (id) => {
 AWS Amplify is a development platform provided by Amazon Web Services (AWS) that makes it easy for developers to build, deploy, and scale mobile and web applications. It integrates with various AWS services and provides a set of tools and is easy to use and allows for rapid build speeds.
 
 # Adding Comment
-We can see the files clearly in the GraphQL
+We can see the files clearly in the DynamoDB
 https://github.com/mfkimbell/aws-amplify-auth/assets/107063397/d45fd6e7-a0b4-4f2c-b2f2-a74f7595882c
 
 ``` Javascript
